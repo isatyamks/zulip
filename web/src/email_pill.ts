@@ -41,13 +41,18 @@ export function get_email_from_item(item: EmailPill): string {
     return item.email;
 }
 
-export function get_current_email(
+export function get_current_emails(
     pill_container: input_pill.InputPillContainer<EmailPill>,
 ): string | null {
-    const current_text = pill_container.getCurrentText();
-    if (current_text !== null) {
-        const parsed_address = parseOneAddress(current_text);
-        if (parsed_address?.type === "mailbox") {
+    let current_text = pill_container.getCurrentText();
+    if (current_text) {
+        current_text = current_text.replace(/,\s*$/, "");
+        const parsed_emails = parseAddressList(current_text);
+        if (
+            parsed_emails !== null &&
+            parsed_emails.length > 0 &&
+            parsed_emails.every((email) => email.type === "mailbox")
+        ) {
             return current_text;
         }
     }

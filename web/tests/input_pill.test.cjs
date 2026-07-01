@@ -287,6 +287,43 @@ run_test("comma", ({mock_template}) => {
     });
 
     assert.deepEqual(widget.items(), [items.blue, items.red, items.yellow]);
+
+    // Test with allow_comma_in_item_text: true
+    $.clear_all_elements();
+    const info_no_split = set_up();
+    const config_no_split = {
+        ...info_no_split.config,
+        allow_comma_in_item_text: true,
+    };
+    const widget_no_split = input_pill.create(config_no_split);
+    widget_no_split.appendValue("blue");
+
+    const key_handler_no_split = info_no_split.$container.get_on_handler("keydown", ".input");
+    const $pill_input_no_split = info_no_split.$pill_input;
+
+    // Invalid item should NOT prevent default, allowing the comma to be typed
+    let prevent_default_called = false;
+    $pill_input_no_split.text(" yel");
+    key_handler_no_split({
+        key: ",",
+        /* istanbul ignore next */
+        preventDefault() {
+            prevent_default_called = true;
+        },
+    });
+    assert.deepEqual(widget_no_split.items(), [items.blue]);
+    assert.equal(prevent_default_called, false);
+
+    // Valid item SHOULD prevent default and pillify the item
+    $pill_input_no_split.text(" yellow");
+    key_handler_no_split({
+        key: ",",
+        preventDefault() {
+            prevent_default_called = true;
+        },
+    });
+    assert.deepEqual(widget_no_split.items(), [items.blue, items.yellow]);
+    assert.equal(prevent_default_called, true);
 });
 
 run_test("Enter key with text", ({mock_template}) => {
